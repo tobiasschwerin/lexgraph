@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Paragraph {
+  id           String  @id // e.g. "bgb-242"
+  lawCode      String  // "BGB"
+  section      String  // "242"
+  sectionOrder Int     @default(0) // numeric sort key: 305 for "305a"
+  title        String?
+  content      String
+
+  connectionsFrom Connection[] @relation("FromParagraph")
+  connectionsTo   Connection[] @relation("ToParagraph")
+  notes           Note[]
+  tags            ParagraphTag[]
+  mapNodes        MapNode[]
+}
+
+model Connection {
+  id          String  @id @default(cuid())
+  fromId      String
+  toId        String
+  label       String?
+  mapId       String?
+  createdBy   String
+  isAutomatic Boolean @default(false)
+
+  from Paragraph @relation("FromParagraph", fields: [fromId], references: [id])
+  to   Paragraph @relation("ToParagraph",   fields: [toId],   references: [id])
+  map  LexMap?   @relation(fields: [mapId], references: [id])
+}
+
+model LexMap {
+  id          String  @id @default(cuid())
+  title       String
+  description String?
+  ownerId     String
+  isPublic    Boolean @default(false)
+  shareToken  String? @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  nodes         MapNode[]
+  connections   Connection[]
+  collaborators MapCollaborator[]
+}
+
+model MapNode {
+  id          String @id @default(cuid())
+  mapId       String
+  paragraphId String
+  posX        Float
+  posY        Float
+
+  map       LexMap    @relation(fields: [mapId],       references: [id], onDelete: Cascade)
+  paragraph Paragraph @relation(fields: [paragraphId], references: [id])
+
+  @@unique([mapId, paragraphId])
+}
+
+model MapCollaborator {
+  id     String @id @default(cuid())
+  mapId  String
+  userId String
+  role   String @default("viewer") // "viewer" | "editor"
+
+  map LexMap @relation(fields: [mapId], references: [id], onDelete: Cascade)
+
+  @@unique([mapId, userId])
+}
+
+model Note {
+  id          String   @id @default(cuid())
+  content     String
+  paragraphId String
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  paragraph Paragraph @relation(fields: [paragraphId], references: [id])
+}
+
+model Tag {
+  id   String @id @default(cuid())
+  name String @unique
+
+  paragraphs ParagraphTag[]
+}
+
+model ParagraphTag {
+  paragraphId String
+  tagId       String
+  userId      String
+
+  paragraph Paragraph @relation(fields: [paragraphId], references: [id])
+  tag       Tag       @relation(fields: [tagId],       references: [id])
+
+  @@id([paragraphId, tagId, userId])
+}
