@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { isPro, FREE_MAP_LIMIT } from "@/lib/stripe";
 
 export async function GET() {
   const { userId } = await auth();
@@ -23,6 +24,17 @@ export async function POST(req: NextRequest) {
 
   if (!title?.trim()) {
     return NextResponse.json({ error: "Title required" }, { status: 400 });
+  }
+
+  const pro = await isPro(userId);
+  if (!pro) {
+    const mapCount = await prisma.lexMap.count({ where: { ownerId: userId } });
+    if (mapCount >= FREE_MAP_LIMIT) {
+      return NextResponse.json(
+        { error: "FREE_LIMIT", message: `Free plan: max ${FREE_MAP_LIMIT} Maps. Upgrade auf Pro für unbegrenzte Maps.` },
+        { status: 403 }
+      );
+    }
   }
 
   const map = await prisma.lexMap.create({
