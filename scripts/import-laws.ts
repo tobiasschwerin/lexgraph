@@ -10,6 +10,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { existsSync, mkdirSync } from "fs";
 import { readFile } from "fs/promises";
+import pg from "pg";
 import "dotenv/config";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -18,7 +19,14 @@ const CACHE_DIR = path.join(__dirname, "../.law-cache");
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) throw new Error("DATABASE_URL not set — check your .env file");
 
-const adapter = new PrismaPg({ connectionString });
+const pool = new pg.Pool({
+  connectionString,
+  max: 5,
+  idleTimeoutMillis: 60000,
+  connectionTimeoutMillis: 30000,
+  keepAlive: true,
+});
+const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 // Laws to import: [name, zipUrl, code]
@@ -72,37 +80,43 @@ async function importLaw(name: string, url: string, code: string) {
   const { paragraphs, refs } = await parseLawXml(xml, code);
   console.log(`[${code}] Found ${paragraphs.length} paragraphs, ${refs.length} cross-references`);
 
-  // Upsert paragraphs in batches
+  // Upsert paragraphs in bulk batches of 200
+  const BATCH = 200;
   let upserted = 0;
-  for (const p of paragraphs) {
-    await prisma.paragraph.upsert({
-      where: { id: p.id },
-      create: p,
-      update: { content: p.content, title: p.title, sectionOrder: p.sectionOrder },
-    });
-    upserted++;
-    if (upserted % 100 === 0) process.stdout.write(`  ${upserted}/${paragraphs.length} paragraphs\r`);
+  for (let i = 0; i < paragraphs.length; i += BATCH) {
+    const batch = paragraphs.slice(i, i + BATCH);
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO "Paragraph" (id, "lawCode", section, "sectionOrder", title, content)
+       VALUES ${batch.map((_, j) => `($${j * 6 + 1},$${j * 6 + 2},$${j * 6 + 3},$${j * 6 + 4},$${j * 6 + 5},$${j * 6 + 6})`).join(",")}
+       ON CONFLICT (id) DO UPDATE SET content=EXCLUDED.content, title=EXCLUDED.title, "sectionOrder"=EXCLUDED."sectionOrder"`,
+      ...batch.flatMap(p => [p.id, p.lawCode, p.section, p.sectionOrder, p.title ?? null, p.content])
+    );
+    upserted += batch.length;
+    process.stdout.write(`  ${upserted}/${paragraphs.length} paragraphs\r`);
   }
   console.log(`[${code}] ✓ ${upserted} paragraphs imported`);
 
-  // Insert cross-references (skip duplicates)
-  let refCount = 0;
-  for (const ref of refs) {
-    try {
-      await prisma.connection.create({
-        data: {
-          fromId: ref.fromId,
-          toId: ref.toId,
-          createdBy: "system",
-          isAutomatic: true,
-        },
-      });
-      refCount++;
-    } catch {
-      // Duplicate — ignore
+  // Insert cross-references in bulk (skip duplicates)
+  const validRefs = refs.filter(r => r.fromId && r.toId);
+  if (validRefs.length > 0) {
+    const REF_BATCH = 500;
+    let refCount = 0;
+    for (let i = 0; i < validRefs.length; i += REF_BATCH) {
+      const batch = validRefs.slice(i, i + REF_BATCH);
+      try {
+        const result = await prisma.connection.createMany({
+          data: batch.map(r => ({ fromId: r.fromId, toId: r.toId, createdBy: "system", isAutomatic: true })),
+          skipDuplicates: true,
+        });
+        refCount += result.count;
+      } catch {
+        // ignore batch errors
+      }
     }
+    console.log(`[${code}] ✓ ${refCount} cross-references imported`);
+  } else {
+    console.log(`[${code}] ✓ 0 cross-references`);
   }
-  console.log(`[${code}] ✓ ${refCount} cross-references imported`);
 }
 
 async function main() {

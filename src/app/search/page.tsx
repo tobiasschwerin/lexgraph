@@ -142,9 +142,7 @@ export default function SearchPage() {
         {/* Treffer-Zähler */}
         {!loading && total > 0 && (
           <p className="text-xs text-slate-400 mb-3">
-            {results.length === total
-              ? `${total} Paragraph${total !== 1 ? "en" : ""}`
-              : `${results.length} von ${total} Paragraphen`}
+            {`${total} Paragraph${total !== 1 ? "en" : ""}`}
           </p>
         )}
 
