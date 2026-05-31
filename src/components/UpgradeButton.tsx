@@ -22,11 +22,11 @@ export function UpgradeButton() {
       if (data.url) {
         window.location.href = data.url;
       } else {
-        console.error("Checkout error:", data.error);
+        alert(`Fehler beim Checkout: ${data.error ?? "Unbekannter Fehler"}`);
         setLoading(false);
       }
     } catch (e) {
-      console.error(e);
+      alert(`Netzwerkfehler: ${String(e)}`);
       setLoading(false);
     }
   };

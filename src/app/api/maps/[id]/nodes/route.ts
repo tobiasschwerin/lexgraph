@@ -10,7 +10,7 @@ export async function POST(
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id: mapId } = await params;
-  const { paragraphId, posX = 100, posY = 100 } = await req.json() as {
+  const { paragraphId, posX, posY } = await req.json() as {
     paragraphId: string;
     posX?: number;
     posY?: number;
@@ -31,8 +31,14 @@ export async function POST(
   });
   if (existing) return NextResponse.json({ error: "Already in map" }, { status: 409 });
 
+  // Auto-position: place next to existing nodes or in a grid
+  const existingNodes = await prisma.mapNode.findMany({ where: { mapId } });
+  const count = existingNodes.length;
+  const finalX = posX ?? 120 + (count % 4) * 300;
+  const finalY = posY ?? 100 + Math.floor(count / 4) * 220;
+
   const node = await prisma.mapNode.create({
-    data: { mapId, paragraphId, posX, posY },
+    data: { mapId, paragraphId, posX: finalX, posY: finalY },
   });
 
   return NextResponse.json(node, { status: 201 });
