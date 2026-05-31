@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import Stripe from "stripe";
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
   const sig = req.headers.get("stripe-signature")!;
+  const stripe = getStripe();
 
   let event: Stripe.Event;
   try {
@@ -18,11 +19,8 @@ export async function POST(req: NextRequest) {
     const session = event.data.object as Stripe.Checkout.Session;
     const customerId = session.customer as string;
     const subscriptionId = session.subscription as string;
-
     const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-    const sub = await prisma.userSubscription.findUnique({
-      where: { stripeCustomerId: customerId },
-    });
+    const sub = await prisma.userSubscription.findUnique({ where: { stripeCustomerId: customerId } });
     if (sub) {
       await prisma.userSubscription.update({
         where: { stripeCustomerId: customerId },
@@ -40,7 +38,6 @@ export async function POST(req: NextRequest) {
     const invoice = event.data.object as Stripe.Invoice;
     const subscriptionId = (invoice as { subscription?: string }).subscription;
     if (!subscriptionId) return NextResponse.json({ ok: true });
-
     const subscription = await stripe.subscriptions.retrieve(subscriptionId);
     await prisma.userSubscription.update({
       where: { stripeSubscriptionId: subscriptionId },
@@ -51,10 +48,7 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  if (
-    event.type === "customer.subscription.deleted" ||
-    event.type === "customer.subscription.paused"
-  ) {
+  if (event.type === "customer.subscription.deleted" || event.type === "customer.subscription.paused") {
     const subscription = event.data.object as Stripe.Subscription;
     await prisma.userSubscription.update({
       where: { stripeSubscriptionId: subscription.id },

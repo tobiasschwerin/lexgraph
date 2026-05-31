@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { Search, ArrowLeft } from "lucide-react";
 import { sectionPrefix } from "@/lib/law-utils";
+import { UpgradeButton } from "@/components/UpgradeButton";
 
 type SearchResult = {
   id: string;
@@ -94,13 +95,16 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <nav className="flex items-center gap-4 px-8 py-4 border-b border-slate-200 bg-white">
-        <Link href="/" className="text-slate-500 hover:text-slate-800 transition-colors">
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
-        <span className="text-lg font-bold text-blue-600">LexGraph</span>
-        <span className="text-slate-300">|</span>
-        <span className="text-sm text-slate-500">Gesetze suchen</span>
+      <nav className="flex items-center justify-between gap-4 px-8 py-4 border-b border-slate-200 bg-white">
+        <div className="flex items-center gap-4">
+          <Link href="/" className="text-slate-500 hover:text-slate-800 transition-colors">
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <span className="text-lg font-bold text-blue-600">LexGraph</span>
+          <span className="text-slate-300">|</span>
+          <span className="text-sm text-slate-500">Gesetze suchen</span>
+        </div>
+        <UpgradeButton />
       </nav>
 
       <div className="max-w-3xl mx-auto w-full px-6 pt-12 pb-8">

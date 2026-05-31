@@ -26,10 +26,13 @@ export async function POST(
     return NextResponse.json({ error: "Paragraph not found" }, { status: 404 });
   }
 
-  const node = await prisma.mapNode.upsert({
+  const existing = await prisma.mapNode.findUnique({
     where: { mapId_paragraphId: { mapId, paragraphId } },
-    create: { mapId, paragraphId, posX, posY },
-    update: {},
+  });
+  if (existing) return NextResponse.json({ error: "Already in map" }, { status: 409 });
+
+  const node = await prisma.mapNode.create({
+    data: { mapId, paragraphId, posX, posY },
   });
 
   return NextResponse.json(node, { status: 201 });
