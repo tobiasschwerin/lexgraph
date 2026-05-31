@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Plus, Map, Trash2, Zap, Crown } from "lucide-react";
@@ -16,6 +16,14 @@ type LexMap = {
 };
 
 export default function LibraryPage() {
+  return (
+    <Suspense>
+      <LibraryContent />
+    </Suspense>
+  );
+}
+
+function LibraryContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [maps, setMaps] = useState<LexMap[]>([]);
