@@ -32,7 +32,6 @@ function LibraryContent() {
   const [newTitle, setNewTitle] = useState("");
   const [saving, setSaving] = useState(false);
   const [isPro, setIsPro] = useState(false);
-  const [upgrading, setUpgrading] = useState(false);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const upgraded = searchParams.get("upgraded") === "true";
 
@@ -72,12 +71,8 @@ function LibraryContent() {
     setMaps((prev) => prev.filter((m) => m.id !== id));
   };
 
-  const handleUpgrade = async () => {
-    setUpgrading(true);
-    const res = await fetch("/api/stripe/checkout", { method: "POST" });
-    const data = await res.json() as { url: string };
-    if (data.url) window.location.href = data.url;
-    else setUpgrading(false);
+  const handleUpgrade = () => {
+    window.location.href = "/api/stripe/checkout";
   };
 
   const atLimit = !isPro && maps.length >= FREE_LIMIT;
@@ -101,11 +96,11 @@ function LibraryContent() {
           ) : (
             <button
               onClick={handleUpgrade}
-              disabled={upgrading}
+              
               className="flex items-center gap-1.5 text-xs font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1.5 rounded-full hover:opacity-90 transition-opacity disabled:opacity-60"
             >
               <Zap className="w-3.5 h-3.5" />
-              {upgrading ? "Weiterleitung…" : "Upgrade auf Pro"}
+              Upgrade auf Pro
             </button>
           )}
           <button
@@ -155,11 +150,11 @@ function LibraryContent() {
             <div className="flex gap-2 justify-center">
               <button
                 onClick={handleUpgrade}
-                disabled={upgrading}
+                
                 className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm px-5 py-2 rounded-lg hover:opacity-90 disabled:opacity-60 transition-opacity"
               >
                 <Zap className="w-4 h-4" />
-                {upgrading ? "Weiterleitung…" : "Pro für €14,99/Monat"}
+                Pro für €14,99/Monat
               </button>
               <button
                 onClick={() => setShowUpgradePrompt(false)}
