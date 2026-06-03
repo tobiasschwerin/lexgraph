@@ -99,7 +99,7 @@ function LibraryContent() {
           <Link href="/" className="text-slate-400 hover:text-blue-900 transition-colors cursor-pointer">
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <span className="text-base font-bold text-blue-900" style={{ fontFamily: "'EB Garamond', serif" }}>LexGraph</span>
+          <span className="text-base font-bold text-blue-900" style={{ fontFamily: "'EB Garamond', serif" }}>JuraMap</span>
           <span className="text-slate-200 hidden sm:block">|</span>
           <span className="text-sm text-slate-400 hidden sm:block">Meine Maps</span>
         </div>

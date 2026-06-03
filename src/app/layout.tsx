@@ -3,8 +3,8 @@ import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "LexGraph — Deutsches Recht visuell",
-  description: "Verbinde Gesetzesparagraphen wie eine Mindmap. Für Anwälte und Juristen.",
+  title: "JuraMap — Deutsches Recht visuell",
+  description: "Verbinde Gesetzesparagraphen wie eine Mindmap. Für Juristen.",
 };
 
 export default function RootLayout({

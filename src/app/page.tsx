@@ -14,7 +14,7 @@ export default function LandingPage() {
             <Scale className="w-4 h-4 text-white" />
           </div>
           <span className="text-lg font-bold text-blue-900 tracking-tight" style={{ fontFamily: "'EB Garamond', serif" }}>
-            LexGraph
+            JuraMap
           </span>
         </div>
         <div className="flex items-center gap-6">
@@ -95,7 +95,7 @@ export default function LandingPage() {
         <div className="relative z-10 text-center max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-400/30 text-blue-200 text-xs font-medium px-4 py-2 rounded-full mb-8 backdrop-blur-sm">
             <Scale className="w-3.5 h-3.5" />
-            Für Anwälte, Notare & Juristen
+            Für Juristen
           </div>
 
           <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight tracking-tight" style={{ fontFamily: "'EB Garamond', serif" }}>
@@ -274,10 +274,10 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-2">
             <Scale className="w-4 h-4 text-blue-400" />
-            <span className="text-white font-semibold text-sm" style={{ fontFamily: "'EB Garamond', serif" }}>LexGraph</span>
+            <span className="text-white font-semibold text-sm" style={{ fontFamily: "'EB Garamond', serif" }}>JuraMap</span>
           </div>
           <p className="text-xs">
-            © 2026 LexGraph · Gesetze via{" "}
+            © 2026 JuraMap · Gesetze via{" "}
             <a href="https://gesetze-im-internet.de" className="underline hover:text-white transition-colors" target="_blank" rel="noopener noreferrer">
               gesetze-im-internet.de
             </a>{" "}

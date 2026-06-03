@@ -131,7 +131,7 @@ export default async function ParagraphDetailPage({
       <nav className="flex items-center justify-between gap-4 px-8 py-4 border-b border-slate-200 bg-white/90 backdrop-blur-sm sticky top-0 z-10 shadow-sm">
         <div className="flex items-center gap-3">
           <BackButton href={mapId ? `/graph/${mapId}` : undefined} />
-          <span className="text-base font-bold text-blue-900" style={{ fontFamily: "'EB Garamond', serif" }}>LexGraph</span>
+          <span className="text-base font-bold text-blue-900" style={{ fontFamily: "'EB Garamond', serif" }}>JuraMap</span>
         </div>
         <UpgradeButton />
       </nav>
