@@ -13,52 +13,71 @@ import React from "react";
 const KNOWN_LAWS = ["BGB", "HGB", "StGB", "GG", "ZPO", "StPO", "VwGO"];
 const LAW_PATTERN = KNOWN_LAWS.join("|");
 // Match in order of specificity:
-// 1. Explicit cross-law: "§ 242 BGB"
-// 2. Article GG: "Art. 20 GG"
-// 3. Bare same-law: "§ 242" (no law suffix)
+// 1. Range: "§§ 346 bis 348" (optional law suffix)
+// 2. Explicit cross-law: "§ 242 BGB"
+// 3. Article GG: "Art. 20 GG"
+// 4. Bare same-law: "§ 242"
 const REF_REGEX = new RegExp(
-  `(§§?\\s*\\d+[a-z]*\\s+(?:${LAW_PATTERN})|Art\\.?\\s*\\d+[a-z]*\\s+GG|§§?\\s*\\d+[a-z]*)`,
+  `(§§?\\s*\\d+[a-z]*\\s+bis\\s+\\d+[a-z]*(?:\\s+(?:${LAW_PATTERN}))?` +
+  `|§§?\\s*\\d+[a-z]*\\s+(?:${LAW_PATTERN})` +
+  `|Art\\.?\\s*\\d+[a-z]*\\s+GG` +
+  `|§§?\\s*\\d+[a-z]*)`,
   "gi"
 );
 
-function refToId(ref: string, fallbackLaw: string): string | null {
+const LINK_CLS = "text-blue-700 font-medium hover:underline cursor-pointer";
+
+function paraLink(id: string, label: string, mapId: string | undefined, key: number | string) {
+  return (
+    <Link key={key} href={`/search/${id}${mapId ? `?from=${mapId}` : ""}`} className={LINK_CLS}>
+      {label}
+    </Link>
+  );
+}
+
+function renderRef(part: string, fallbackLaw: string, mapId: string | undefined, key: number): React.ReactNode {
+  // Range: "§§ 346 bis 348" or "§§ 346 bis 348 BGB"
+  const rangeMatch = part.match(/§§?\s*(\d+[a-z]*)\s+bis\s+(\d+[a-z]*)(?:\s+(BGB|HGB|StGB|GG|ZPO|StPO|VwGO))?/i);
+  if (rangeMatch) {
+    const law = (rangeMatch[3] ?? fallbackLaw).toLowerCase();
+    const from = rangeMatch[1].toLowerCase();
+    const to = rangeMatch[2].toLowerCase();
+    return (
+      <React.Fragment key={key}>
+        {"§§ "}
+        {paraLink(`${law}-${from}`, from, mapId, `${key}a`)}
+        {" bis "}
+        {paraLink(`${law}-${to}`, to, mapId, `${key}b`)}
+      </React.Fragment>
+    );
+  }
   // Explicit: "§ 242 BGB"
-  const paraMatch = ref.match(/§§?\s*(\d+[a-z]*)\s+(BGB|HGB|StGB|GG|ZPO|StPO|VwGO)/i);
-  if (paraMatch) {
-    return `${paraMatch[2].toLowerCase()}-${paraMatch[1].toLowerCase()}`;
+  const explicitMatch = part.match(/§§?\s*(\d+[a-z]*)\s+(BGB|HGB|StGB|GG|ZPO|StPO|VwGO)/i);
+  if (explicitMatch) {
+    const id = `${explicitMatch[2].toLowerCase()}-${explicitMatch[1].toLowerCase()}`;
+    return paraLink(id, part, mapId, key);
   }
   // Article: "Art. 20 GG"
-  const artMatch = ref.match(/Art\.?\s*(\d+[a-z]*)\s+GG/i);
+  const artMatch = part.match(/Art\.?\s*(\d+[a-z]*)\s+GG/i);
   if (artMatch) {
-    return `gg-${artMatch[1].toLowerCase()}`;
+    return paraLink(`gg-${artMatch[1].toLowerCase()}`, part, mapId, key);
   }
   // Bare: "§ 242" → use current law
-  const bareMatch = ref.match(/§§?\s*(\d+[a-z]*)/i);
+  const bareMatch = part.match(/§§?\s*(\d+[a-z]*)/i);
   if (bareMatch) {
-    return `${fallbackLaw.toLowerCase()}-${bareMatch[1].toLowerCase()}`;
+    const id = `${fallbackLaw.toLowerCase()}-${bareMatch[1].toLowerCase()}`;
+    return paraLink(id, part, mapId, key);
   }
-  return null;
+  return <React.Fragment key={key}>{part}</React.Fragment>;
 }
 
 function renderContent(content: string, lawCode: string, mapId?: string): React.ReactNode {
   const parts = content.split(REF_REGEX);
-  return parts.map((part, i) => {
-    if (i % 2 === 1) {
-      const id = refToId(part, lawCode);
-      if (id) {
-        return (
-          <Link
-            key={i}
-            href={`/search/${id}${mapId ? `?from=${mapId}` : ""}`}
-            className="text-blue-700 font-medium hover:underline cursor-pointer"
-          >
-            {part}
-          </Link>
-        );
-      }
-    }
-    return <React.Fragment key={i}>{part}</React.Fragment>;
-  });
+  return parts.map((part, i) =>
+    i % 2 === 1
+      ? renderRef(part, lawCode, mapId, i)
+      : <React.Fragment key={i}>{part}</React.Fragment>
+  );
 }
 
 export default async function ParagraphDetailPage({
