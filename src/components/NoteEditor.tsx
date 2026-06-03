@@ -15,8 +15,8 @@ export function NoteEditor({ paragraphId }: { paragraphId: string }) {
   useEffect(() => {
     fetch(`/api/notes/${paragraphId}`)
       .then((r) => r.json())
-      .then((d: { content: string }) => {
-        setContent(d.content);
+      .then((d: { content?: string }) => {
+        setContent(d.content ?? "");
         setLoaded(true);
       })
       .catch(() => setLoaded(true));

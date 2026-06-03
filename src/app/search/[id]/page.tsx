@@ -131,10 +131,14 @@ export default async function ParagraphDetailPage({
         </div>
 
         {/* KI-Erklärung */}
-        <ExplainButton paragraphId={paragraph.id} />
+        <div className="mb-4">
+          <ExplainButton paragraphId={paragraph.id} />
+        </div>
 
         {/* Persönliche Notizen */}
-        <NoteEditor paragraphId={paragraph.id} />
+        <div className="mb-6">
+          <NoteEditor paragraphId={paragraph.id} />
+        </div>
 
         {/* Verknüpfte Paragraphen — einmalige deduplizierte Liste */}
         {allRefs.length > 0 && (
