@@ -12,28 +12,39 @@ import React from "react";
 
 const KNOWN_LAWS = ["BGB", "HGB", "StGB", "GG", "ZPO", "StPO", "VwGO"];
 const LAW_PATTERN = KNOWN_LAWS.join("|");
+// Match in order of specificity:
+// 1. Explicit cross-law: "§ 242 BGB"
+// 2. Article GG: "Art. 20 GG"
+// 3. Bare same-law: "§ 242" (no law suffix)
 const REF_REGEX = new RegExp(
-  `(§§?\\s*\\d+[a-z]*\\s+(?:${LAW_PATTERN})|Art\\.?\\s*\\d+[a-z]*\\s+GG)`,
+  `(§§?\\s*\\d+[a-z]*\\s+(?:${LAW_PATTERN})|Art\\.?\\s*\\d+[a-z]*\\s+GG|§§?\\s*\\d+[a-z]*)`,
   "gi"
 );
 
-function refToId(ref: string): string | null {
+function refToId(ref: string, fallbackLaw: string): string | null {
+  // Explicit: "§ 242 BGB"
   const paraMatch = ref.match(/§§?\s*(\d+[a-z]*)\s+(BGB|HGB|StGB|GG|ZPO|StPO|VwGO)/i);
   if (paraMatch) {
     return `${paraMatch[2].toLowerCase()}-${paraMatch[1].toLowerCase()}`;
   }
+  // Article: "Art. 20 GG"
   const artMatch = ref.match(/Art\.?\s*(\d+[a-z]*)\s+GG/i);
   if (artMatch) {
     return `gg-${artMatch[1].toLowerCase()}`;
   }
+  // Bare: "§ 242" → use current law
+  const bareMatch = ref.match(/§§?\s*(\d+[a-z]*)/i);
+  if (bareMatch) {
+    return `${fallbackLaw.toLowerCase()}-${bareMatch[1].toLowerCase()}`;
+  }
   return null;
 }
 
-function renderContent(content: string, mapId?: string): React.ReactNode {
+function renderContent(content: string, lawCode: string, mapId?: string): React.ReactNode {
   const parts = content.split(REF_REGEX);
   return parts.map((part, i) => {
     if (i % 2 === 1) {
-      const id = refToId(part);
+      const id = refToId(part, lawCode);
       if (id) {
         return (
           <Link
@@ -126,7 +137,7 @@ export default async function ParagraphDetailPage({
             <h2 className="text-base font-semibold text-slate-600 mb-4 leading-snug">{paragraph.title}</h2>
           )}
           <div className="text-slate-700 leading-relaxed whitespace-pre-wrap text-sm">
-            {renderContent(paragraph.content, mapId)}
+            {renderContent(paragraph.content, paragraph.lawCode, mapId)}
           </div>
         </div>
 
