@@ -6,7 +6,8 @@ const isPublicRoute = createRouteMatcher([
   "/",
   "/sign-in(.*)",
   "/sign-up(.*)",
-  "/api/(.*)",   // API-Routen prüfen Auth selbst und geben 401 JSON zurück
+  "/share/(.*)",  // Öffentliche Map-Share-Links
+  "/api/(.*)",    // API-Routen prüfen Auth selbst und geben 401 JSON zurück
 ]);
 
 const clerkHandler = clerkMiddleware(async (auth, request) => {

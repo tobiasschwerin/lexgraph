@@ -5,6 +5,8 @@ import { BackButton } from "@/components/BackButton";
 import { sectionPrefix } from "@/lib/law-utils";
 import { UpgradeButton } from "@/components/UpgradeButton";
 import { AddToMapButton } from "@/components/AddToMapButton";
+import { NoteEditor } from "@/components/NoteEditor";
+import { ExplainButton } from "@/components/ExplainButton";
 import Link from "next/link";
 import React from "react";
 
@@ -127,6 +129,12 @@ export default async function ParagraphDetailPage({
             {renderContent(paragraph.content, mapId)}
           </div>
         </div>
+
+        {/* KI-Erklärung */}
+        <ExplainButton paragraphId={paragraph.id} />
+
+        {/* Persönliche Notizen */}
+        <NoteEditor paragraphId={paragraph.id} />
 
         {/* Verknüpfte Paragraphen — einmalige deduplizierte Liste */}
         {allRefs.length > 0 && (

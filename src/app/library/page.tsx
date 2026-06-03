@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Plus, Map, Trash2, Zap, Crown } from "lucide-react";
+import { ArrowLeft, Plus, Map, Trash2, Zap, Crown, Share2, Check } from "lucide-react";
 
 const FREE_LIMIT = 3;
 
@@ -12,6 +12,7 @@ type LexMap = {
   title: string;
   description: string | null;
   updatedAt: string;
+  shareToken: string | null;
   _count: { nodes: number };
 };
 
@@ -33,6 +34,7 @@ function LibraryContent() {
   const [saving, setSaving] = useState(false);
   const [isPro, setIsPro] = useState(false);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const upgraded = searchParams.get("upgraded") === "true";
 
   useEffect(() => {
@@ -63,6 +65,19 @@ function LibraryContent() {
     }
     const map = await res.json() as { id: string };
     router.push(`/graph/${map.id}`);
+  };
+
+  const shareMap = async (id: string) => {
+    const res = await fetch(`/api/maps/${id}/share`, { method: "POST" });
+    const { token } = await res.json() as { token: string };
+    const url = `${window.location.origin}/share/${token}`;
+    await navigator.clipboard.writeText(url);
+    setCopiedId(id);
+    // Update maps state to reflect new token
+    setMaps((prev) =>
+      prev.map((m) => (m.id === id ? { ...m, shareToken: token } : m))
+    );
+    setTimeout(() => setCopiedId(null), 2500);
   };
 
   const deleteMap = async (id: string) => {
@@ -226,6 +241,17 @@ function LibraryContent() {
                   {new Date(map.updatedAt).toLocaleDateString("de-DE")}
                 </p>
               </Link>
+              <button
+                onClick={() => shareMap(map.id)}
+                className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-blue-500 transition-all p-1"
+                title="Link kopieren"
+              >
+                {copiedId === map.id ? (
+                  <Check className="w-4 h-4 text-green-500" />
+                ) : (
+                  <Share2 className="w-4 h-4" />
+                )}
+              </button>
               <button
                 onClick={() => deleteMap(map.id)}
                 className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 transition-all p-1"

@@ -57,6 +57,7 @@ type LexMapData = {
 
 interface LexCanvasProps {
   mapData: LexMapData;
+  readOnly?: boolean;
 }
 
 function mapDataToFlow(data: LexMapData): { nodes: Node[]; edges: Edge[] } {
@@ -84,7 +85,7 @@ function mapDataToFlow(data: LexMapData): { nodes: Node[]; edges: Edge[] } {
   return { nodes, edges };
 }
 
-export function LexCanvas({ mapData }: LexCanvasProps) {
+export function LexCanvas({ mapData, readOnly = false }: LexCanvasProps) {
   const { nodes: initNodes, edges: initEdges } = mapDataToFlow(mapData);
   const router = useRouter();
   const [nodes, setNodes, onNodesChange] = useNodesState(initNodes);
@@ -217,12 +218,15 @@ export function LexCanvas({ mapData }: LexCanvasProps) {
       <ReactFlow
         nodes={nodes}
         edges={edges}
-        onNodesChange={handleNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        onNodeDoubleClick={onNodeDoubleClick}
+        onNodesChange={readOnly ? undefined : handleNodesChange}
+        onEdgesChange={readOnly ? undefined : onEdgesChange}
+        onConnect={readOnly ? undefined : onConnect}
+        onNodeDoubleClick={readOnly ? undefined : onNodeDoubleClick}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
+        nodesDraggable={!readOnly}
+        nodesConnectable={!readOnly}
+        elementsSelectable={!readOnly}
         fitView
         minZoom={0.2}
         maxZoom={2}
@@ -234,27 +238,40 @@ export function LexCanvas({ mapData }: LexCanvasProps) {
 
       {/* Toolbar */}
       <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-white border border-slate-200 rounded-xl shadow-md px-4 py-2 z-10">
-        <Link
-          href="/library"
-          className="text-slate-400 hover:text-slate-700 transition-colors"
-          title="Zurück zur Übersicht"
-        >
-          <ArrowLeft className="w-4 h-4" />
-        </Link>
-        <span className="text-slate-300">|</span>
+        {readOnly ? (
+          <>
+            <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">Nur lesen</span>
+            <span className="text-slate-300">|</span>
+          </>
+        ) : (
+          <>
+            <Link
+              href="/library"
+              className="text-slate-400 hover:text-slate-700 transition-colors"
+              title="Zurück zur Übersicht"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </Link>
+            <span className="text-slate-300">|</span>
+          </>
+        )}
         <h1 className="text-sm font-semibold text-slate-700">{mapData.title}</h1>
-        <span className="text-slate-300">|</span>
-        <button
-          onClick={() => setShowSearch((s) => !s)}
-          className="text-xs bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          + Paragraph hinzufügen
-        </button>
-        {saving && <span className="text-xs text-slate-400">Speichert…</span>}
+        {!readOnly && (
+          <>
+            <span className="text-slate-300">|</span>
+            <button
+              onClick={() => setShowSearch((s) => !s)}
+              className="text-xs bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              + Paragraph hinzufügen
+            </button>
+            {saving && <span className="text-xs text-slate-400">Speichert…</span>}
+          </>
+        )}
       </div>
 
       {/* Suchpanel */}
-      {showSearch && (
+      {!readOnly && showSearch && (
         <SearchPanel
           onAdd={addParagraph}
           onClose={() => setShowSearch(false)}
