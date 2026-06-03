@@ -78,15 +78,15 @@ function LibraryContent() {
   const atLimit = !isPro && maps.length >= FREE_LIMIT;
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <nav className="flex items-center justify-between gap-4 px-8 py-4 border-b border-slate-200 bg-white">
-        <div className="flex items-center gap-4">
-          <Link href="/" className="text-slate-500 hover:text-slate-800 transition-colors">
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      <nav className="flex items-center justify-between gap-4 px-8 py-4 border-b border-slate-200 bg-white/90 backdrop-blur-sm sticky top-0 z-10 shadow-sm">
+        <div className="flex items-center gap-3">
+          <Link href="/" className="text-slate-400 hover:text-blue-900 transition-colors cursor-pointer">
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <span className="text-lg font-bold text-blue-600">LexGraph</span>
-          <span className="text-slate-300">|</span>
-          <span className="text-sm text-slate-500">Meine Maps</span>
+          <span className="text-base font-bold text-blue-900" style={{ fontFamily: "'EB Garamond', serif" }}>LexGraph</span>
+          <span className="text-slate-200 hidden sm:block">|</span>
+          <span className="text-sm text-slate-400 hidden sm:block">Meine Maps</span>
         </div>
         <div className="flex items-center gap-3">
           {isPro ? (
@@ -217,9 +217,9 @@ function LibraryContent() {
           {maps.map((map) => (
             <div
               key={map.id}
-              className="bg-white border border-slate-200 rounded-xl px-5 py-4 hover:border-blue-300 hover:shadow-sm transition-all flex items-center gap-4 group"
+              className="bg-white border border-slate-100 rounded-2xl px-5 py-4 hover:border-blue-200 hover:shadow-md transition-all flex items-center gap-4 group"
             >
-              <Link href={`/graph/${map.id}`} className="flex-1 min-w-0">
+              <Link href={`/graph/${map.id}`} className="flex-1 min-w-0 cursor-pointer">
                 <p className="font-semibold text-slate-800 truncate">{map.title}</p>
                 <p className="text-xs text-slate-400 mt-0.5">
                   {map._count.nodes} Paragraph{map._count.nodes !== 1 ? "en" : ""} ·{" "}

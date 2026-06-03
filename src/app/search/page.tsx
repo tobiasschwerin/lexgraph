@@ -94,22 +94,22 @@ export default function SearchPage() {
   }, [hasMore, loadingMore, query, lawFilter, fetchResults]);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <nav className="flex items-center justify-between gap-4 px-8 py-4 border-b border-slate-200 bg-white">
-        <div className="flex items-center gap-4">
-          <Link href="/" className="text-slate-500 hover:text-slate-800 transition-colors">
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      <nav className="flex items-center justify-between gap-4 px-8 py-4 border-b border-slate-200 bg-white/90 backdrop-blur-sm sticky top-0 z-10 shadow-sm">
+        <div className="flex items-center gap-3">
+          <Link href="/" className="text-slate-400 hover:text-blue-900 transition-colors cursor-pointer">
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <span className="text-lg font-bold text-blue-600">LexGraph</span>
-          <span className="text-slate-300">|</span>
-          <span className="text-sm text-slate-500">Gesetze suchen</span>
+          <span className="text-base font-bold text-blue-900" style={{ fontFamily: "'EB Garamond', serif" }}>LexGraph</span>
+          <span className="text-slate-200 hidden sm:block">|</span>
+          <span className="text-sm text-slate-400 hidden sm:block">Gesetze suchen</span>
         </div>
         <UpgradeButton />
       </nav>
 
-      <div className="max-w-3xl mx-auto w-full px-6 pt-12 pb-8">
+      <div className="max-w-3xl mx-auto w-full px-6 pt-10 pb-8">
         {/* Suchfeld */}
-        <div className="relative mb-4">
+        <div className="relative mb-5">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
           <input
             autoFocus
@@ -117,7 +117,7 @@ export default function SearchPage() {
             placeholder="Suche nach Paragraph, Begriff oder Gesetz…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 text-base border border-slate-200 rounded-xl bg-white shadow-sm outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition-all"
+            className="w-full pl-12 pr-4 py-3.5 text-base border border-slate-200 rounded-2xl bg-white shadow-sm outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all"
           />
         </div>
 
@@ -127,10 +127,10 @@ export default function SearchPage() {
             <button
               key={law}
               onClick={() => setLawFilter(law)}
-              className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${
+              className={`text-xs px-4 py-2 rounded-full font-semibold transition-all cursor-pointer ${
                 lawFilter === law
-                  ? "bg-blue-600 text-white"
-                  : "bg-white border border-slate-200 text-slate-600 hover:border-blue-300"
+                  ? "bg-blue-900 text-white shadow-sm"
+                  : "bg-white border border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-800"
               }`}
             >
               {law}
@@ -140,24 +140,32 @@ export default function SearchPage() {
 
         {/* Ladezustand */}
         {loading && (
-          <p className="text-sm text-slate-400 text-center py-12">Lade…</p>
+          <div className="flex flex-col gap-2 mt-2">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="bg-white border border-slate-100 rounded-xl px-5 py-4 animate-pulse">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-5 bg-slate-100 rounded" />
+                  <div className="w-16 h-4 bg-slate-100 rounded" />
+                  <div className="w-32 h-4 bg-slate-100 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
         )}
 
         {/* Treffer-Zähler */}
         {!loading && total > 0 && (
-          <p className="text-xs text-slate-400 mb-3">
-            {`${total} Paragraph${total !== 1 ? "en" : ""}`}
+          <p className="text-xs text-slate-400 mb-4 font-medium">
+            {`${total.toLocaleString("de-DE")} Paragraph${total !== 1 ? "en" : ""}`}
           </p>
         )}
 
         {/* Kein Ergebnis */}
         {!loading && results.length === 0 && (query || lawFilter !== "Alle") && (
-          <div className="text-center py-16">
-            <p className="text-slate-400 text-sm">Keine Paragraphen gefunden.</p>
-            <p className="text-slate-400 text-xs mt-1">
-              Tipp: Importiere zuerst die Gesetze mit{" "}
-              <code className="bg-slate-100 px-1 rounded">npm run import-laws</code>
-            </p>
+          <div className="text-center py-20">
+            <Search className="w-10 h-10 text-slate-200 mx-auto mb-4" />
+            <p className="text-slate-500 font-medium">Keine Paragraphen gefunden.</p>
+            <p className="text-slate-400 text-sm mt-1">Versuche einen anderen Suchbegriff.</p>
           </div>
         )}
 
@@ -168,15 +176,15 @@ export default function SearchPage() {
             <Link
               key={r.id}
               href={`/search/${r.id}`}
-              className="bg-white border border-slate-200 rounded-xl px-5 py-4 hover:border-blue-300 hover:shadow-sm transition-all group"
+              className="bg-white border border-slate-100 rounded-2xl px-5 py-4 hover:border-blue-200 hover:shadow-md transition-all group cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg group-hover:bg-blue-100 transition-colors">
+                <span className="text-xs font-bold text-blue-900 bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-lg shrink-0 group-hover:bg-blue-100 transition-colors">
                   {r.lawCode}
                 </span>
-                <span className="font-semibold text-slate-800">{sectionPrefix(r.lawCode)} {r.section}</span>
+                <span className="font-semibold text-slate-800 text-sm">{sectionPrefix(r.lawCode)} {r.section}</span>
                 {r.title && (
-                  <span className="text-slate-500 text-sm truncate">{r.title}</span>
+                  <span className="text-slate-400 text-sm truncate">{r.title}</span>
                 )}
               </div>
             </Link>
