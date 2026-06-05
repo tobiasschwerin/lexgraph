@@ -1,23 +1,9 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { clerkMiddleware } from "@clerk/nextjs/server";
 import type { NextFetchEvent, NextRequest } from "next/server";
 
-// Public routes — alle anderen werden automatisch geschützt
-const isPublicRoute = createRouteMatcher([
-  "/",
-  "/search(.*)",  // Suche & Paragraph-Detail: Auth via API-Layer
-  "/library",     // Library: Auth via API-Layer
-  "/graph(.*)",   // Graph-Editor: Auth via API-Layer
-  "/share(.*)",   // Öffentliche Map-Share-Links
-  "/sign-in(.*)",
-  "/sign-up(.*)",
-  "/api/(.*)",    // API-Routen prüfen Auth selbst und geben 401 JSON zurück
-]);
-
-const clerkHandler = clerkMiddleware(async (auth, request) => {
-  if (!isPublicRoute(request)) {
-    await auth.protect();
-  }
-});
+// Clerk läuft passiv – setzt nur Auth-Header für API-Routen und Server-Components.
+// Seitenschutz passiert ausschließlich im API-Layer (401 JSON bei fehlendem Token).
+const clerkHandler = clerkMiddleware();
 
 // Next.js 16 requires the export to be named "proxy"
 export function proxy(request: NextRequest, event: NextFetchEvent) {
