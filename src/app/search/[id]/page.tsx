@@ -1,84 +1,10 @@
 import { notFound } from "next/navigation";
-import { Link2 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { BackButton } from "@/components/BackButton";
-import { sectionPrefix } from "@/lib/law-utils";
 import { UpgradeButton } from "@/components/UpgradeButton";
-import { AddToMapButton } from "@/components/AddToMapButton";
-import { NoteEditor } from "@/components/NoteEditor";
-import { ExplainButton } from "@/components/ExplainButton";
-import Link from "next/link";
-import React from "react";
+import { PanelStack } from "@/components/PanelStack";
 
-const KNOWN_LAWS = ["BGB", "HGB", "StGB", "GG", "ZPO", "StPO", "VwGO"];
-const LAW_PATTERN = KNOWN_LAWS.join("|");
-// Match in order of specificity:
-// 1. Range: "§§ 346 bis 348" (optional law suffix)
-// 2. Explicit cross-law: "§ 242 BGB"
-// 3. Article GG: "Art. 20 GG"
-// 4. Bare same-law: "§ 242"
-const REF_REGEX = new RegExp(
-  `(§§?\\s*\\d+[a-z]*\\s+bis\\s+\\d+[a-z]*(?:\\s+(?:${LAW_PATTERN}))?` +
-  `|§§?\\s*\\d+[a-z]*\\s+(?:${LAW_PATTERN})` +
-  `|Art\\.?\\s*\\d+[a-z]*\\s+GG` +
-  `|§§?\\s*\\d+[a-z]*)`,
-  "gi"
-);
-
-const LINK_CLS = "text-blue-700 font-medium hover:underline cursor-pointer";
-
-function paraLink(id: string, label: string, mapId: string | undefined, key: number | string) {
-  return (
-    <Link key={key} href={`/search/${id}${mapId ? `?from=${mapId}` : ""}`} className={LINK_CLS}>
-      {label}
-    </Link>
-  );
-}
-
-function renderRef(part: string, fallbackLaw: string, mapId: string | undefined, key: number): React.ReactNode {
-  // Range: "§§ 346 bis 348" or "§§ 346 bis 348 BGB"
-  const rangeMatch = part.match(/§§?\s*(\d+[a-z]*)\s+bis\s+(\d+[a-z]*)(?:\s+(BGB|HGB|StGB|GG|ZPO|StPO|VwGO))?/i);
-  if (rangeMatch) {
-    const law = (rangeMatch[3] ?? fallbackLaw).toLowerCase();
-    const from = rangeMatch[1].toLowerCase();
-    const to = rangeMatch[2].toLowerCase();
-    return (
-      <React.Fragment key={key}>
-        {"§§ "}
-        {paraLink(`${law}-${from}`, from, mapId, `${key}a`)}
-        {" bis "}
-        {paraLink(`${law}-${to}`, to, mapId, `${key}b`)}
-      </React.Fragment>
-    );
-  }
-  // Explicit: "§ 242 BGB"
-  const explicitMatch = part.match(/§§?\s*(\d+[a-z]*)\s+(BGB|HGB|StGB|GG|ZPO|StPO|VwGO)/i);
-  if (explicitMatch) {
-    const id = `${explicitMatch[2].toLowerCase()}-${explicitMatch[1].toLowerCase()}`;
-    return paraLink(id, part, mapId, key);
-  }
-  // Article: "Art. 20 GG"
-  const artMatch = part.match(/Art\.?\s*(\d+[a-z]*)\s+GG/i);
-  if (artMatch) {
-    return paraLink(`gg-${artMatch[1].toLowerCase()}`, part, mapId, key);
-  }
-  // Bare: "§ 242" → use current law
-  const bareMatch = part.match(/§§?\s*(\d+[a-z]*)/i);
-  if (bareMatch) {
-    const id = `${fallbackLaw.toLowerCase()}-${bareMatch[1].toLowerCase()}`;
-    return paraLink(id, part, mapId, key);
-  }
-  return <React.Fragment key={key}>{part}</React.Fragment>;
-}
-
-function renderContent(content: string, lawCode: string, mapId?: string): React.ReactNode {
-  const parts = content.split(REF_REGEX);
-  return parts.map((part, i) =>
-    i % 2 === 1
-      ? renderRef(part, lawCode, mapId, i)
-      : <React.Fragment key={i}>{part}</React.Fragment>
-  );
-}
+export const dynamic = "force-dynamic";
 
 export default async function ParagraphDetailPage({
   params,
@@ -108,97 +34,17 @@ export default async function ParagraphDetailPage({
 
   if (!paragraph) notFound();
 
-  // Deduplizierte Verweise-Liste
-  const seenIds = new Set<string>();
-  type RefPara = { id: string; lawCode: string; section: string; title: string | null };
-  const allRefs: RefPara[] = [];
-
-  for (const c of paragraph.connectionsFrom) {
-    if (!seenIds.has(c.to.id)) {
-      seenIds.add(c.to.id);
-      allRefs.push(c.to);
-    }
-  }
-  for (const c of paragraph.connectionsTo) {
-    if (!seenIds.has(c.from.id)) {
-      seenIds.add(c.from.id);
-      allRefs.push(c.from);
-    }
-  }
-
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
-      <nav className="flex items-center justify-between gap-4 px-8 py-4 border-b border-slate-200 bg-white/90 backdrop-blur-sm sticky top-0 z-10 shadow-sm">
+    <div className="h-screen flex flex-col bg-slate-50 overflow-hidden">
+      <nav className="flex items-center justify-between gap-4 px-8 py-4 border-b border-slate-200 bg-white/90 backdrop-blur-sm z-10 shadow-sm shrink-0">
         <div className="flex items-center gap-3">
-          <BackButton href={mapId ? `/graph/${mapId}` : undefined} />
+          <BackButton href={mapId ? `/graph/${mapId}` : "/search"} />
           <span className="text-base font-bold text-blue-900" style={{ fontFamily: "'EB Garamond', serif" }}>JuraMap</span>
         </div>
         <UpgradeButton />
       </nav>
 
-      <div className="max-w-3xl mx-auto w-full px-6 py-10">
-        {/* Paragraph Inhalt */}
-        <div className="bg-white border border-slate-100 rounded-2xl p-8 mb-6 shadow-sm">
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-bold text-blue-900 bg-blue-50 border border-blue-100 px-3 py-1 rounded-lg">
-                {paragraph.lawCode}
-              </span>
-              <h1 className="text-2xl font-bold text-slate-900" style={{ fontFamily: "'EB Garamond', serif" }}>
-                {sectionPrefix(paragraph.lawCode)} {paragraph.section}
-              </h1>
-            </div>
-            {mapId && (
-              <AddToMapButton paragraphId={paragraph.id} mapId={mapId} label="In Map" />
-            )}
-          </div>
-          {paragraph.title && (
-            <h2 className="text-base font-semibold text-slate-600 mb-4 leading-snug">{paragraph.title}</h2>
-          )}
-          <div className="text-slate-700 leading-relaxed whitespace-pre-wrap text-sm">
-            {renderContent(paragraph.content, paragraph.lawCode, mapId)}
-          </div>
-        </div>
-
-        {/* KI-Erklärung */}
-        <div className="mb-4">
-          <ExplainButton paragraphId={paragraph.id} />
-        </div>
-
-        {/* Persönliche Notizen */}
-        <div className="mb-6">
-          <NoteEditor paragraphId={paragraph.id} />
-        </div>
-
-        {/* Verknüpfte Paragraphen — einmalige deduplizierte Liste */}
-        {allRefs.length > 0 && (
-          <div>
-            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-              <Link2 className="w-4 h-4" />
-              Verknüpfte Paragraphen ({allRefs.length})
-            </h3>
-            <div className="flex flex-col gap-2">
-              {allRefs.map((ref) => (
-                <div key={ref.id} className="flex items-center gap-2">
-                  <Link
-                    href={`/search/${ref.id}${mapId ? `?from=${mapId}` : ""}`}
-                    className="flex-1 bg-white border border-slate-100 rounded-2xl px-4 py-3 hover:border-blue-200 hover:shadow-md transition-all flex items-center gap-3 cursor-pointer"
-                  >
-                    <span className="text-xs font-bold text-blue-900 bg-blue-50 border border-blue-100 px-2.5 py-0.5 rounded-lg shrink-0">
-                      {ref.lawCode}
-                    </span>
-                    <span className="font-medium text-slate-800 text-sm">{sectionPrefix(ref.lawCode)} {ref.section}</span>
-                    {ref.title && <span className="text-sm text-slate-400 truncate">{ref.title}</span>}
-                  </Link>
-                  {mapId && (
-                    <AddToMapButton paragraphId={ref.id} mapId={mapId} label="+" />
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+      <PanelStack initialData={paragraph} mapId={mapId} />
     </div>
   );
 }
