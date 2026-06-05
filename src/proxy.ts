@@ -4,9 +4,12 @@ import type { NextFetchEvent, NextRequest } from "next/server";
 // Public routes — alle anderen werden automatisch geschützt
 const isPublicRoute = createRouteMatcher([
   "/",
+  "/search(.*)",  // Suche & Paragraph-Detail: Auth via API-Layer
+  "/library",     // Library: Auth via API-Layer
+  "/graph(.*)",   // Graph-Editor: Auth via API-Layer
+  "/share(.*)",   // Öffentliche Map-Share-Links
   "/sign-in(.*)",
   "/sign-up(.*)",
-  "/share(.*)",   // Öffentliche Map-Share-Links
   "/api/(.*)",    // API-Routen prüfen Auth selbst und geben 401 JSON zurück
 ]);
 
