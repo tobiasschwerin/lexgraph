@@ -6,7 +6,7 @@ const isPublicRoute = createRouteMatcher([
   "/",
   "/sign-in(.*)",
   "/sign-up(.*)",
-  "/share/(.*)",  // Öffentliche Map-Share-Links
+  "/share(.*)",   // Öffentliche Map-Share-Links
   "/api/(.*)",    // API-Routen prüfen Auth selbst und geben 401 JSON zurück
 ]);
 
