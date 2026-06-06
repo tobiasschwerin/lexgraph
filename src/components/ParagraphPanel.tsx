@@ -91,6 +91,7 @@ interface ParagraphPanelProps {
   onClose?: () => void;
   mapId?: string;
   isFirst?: boolean;
+  isOnly?: boolean;
 }
 
 export function ParagraphPanel({
@@ -100,6 +101,7 @@ export function ParagraphPanel({
   onClose,
   mapId,
   isFirst = false,
+  isOnly = false,
 }: ParagraphPanelProps) {
   const [paragraph, setParagraph] = useState<ParagraphData | null>(initialData ?? null);
   const [loading, setLoading] = useState(!initialData);
@@ -128,7 +130,7 @@ export function ParagraphPanel({
   })();
 
   return (
-    <div className="flex-shrink-0 w-[680px] min-w-[320px] h-full overflow-y-auto border-r border-slate-200 bg-slate-50">
+    <div className={`${isOnly ? "w-full" : "flex-shrink-0 w-[680px] min-w-[320px]"} h-full overflow-y-auto border-r border-slate-200 bg-slate-50`}>
       <div className="px-6 py-8 space-y-5">
 
         {loading && (

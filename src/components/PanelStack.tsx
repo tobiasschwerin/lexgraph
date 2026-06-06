@@ -65,6 +65,7 @@ export function PanelStack({ initialData, mapId }: PanelStackProps) {
             onClose={i > 0 ? () => closePanel(panelId) : undefined}
             mapId={mapId}
             isFirst={i === 0}
+            isOnly={panels.length === 1}
           />
         </div>
       ))}
